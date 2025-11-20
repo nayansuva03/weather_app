@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>practice</title>
+</head>
+
+<body>
+    <div class="input-group">
+        <input type="search" id="inputbtn" placeholder="Search" aria-label="Search" aria-describedby="search-addon" />
+        <button type="button" id="submitbtn" data-mdb-ripple-init>search</button>
+    </div>
+    <div id="info">
+        <h2 id="lctn"> Search Results will be Displayed Here</h2>
+        <h2 id="temp"></h2>
+        <h2 id="wind"></h2>
+        <h2 id="overall"></h2>
+    </div>
+
+    <style>
+        /* Apply a basic reset and set font */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #74ebd5, #9face6);
+            /* Subtle blue/green gradient */
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: #333;
+            /* Dark text color */
+        }
+
+        /* Main container for the input and button */
+        .input-group {
+            display: flex;
+            width: 100%;
+            max-width: 400px;
+            /* Limit width on larger screens */
+            margin-bottom: 40px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+            /* Ensure elements inside follow border radius */
+        }
+
+        /* Input field styling */
+        #inputbtn {
+            flex-grow: 1;
+            /* Input takes up available space */
+            padding: 12px 15px;
+            border: none;
+            font-size: 16px;
+            outline: none;
+            background-color: #fff;
+            transition: all 0.3s ease;
+        }
+
+        #inputbtn:focus {
+            box-shadow: 0 0 0 2px #4a90e2;
+            /* Blue focus ring */
+        }
+
+        /* Button styling */
+        #submitbtn {
+            padding: 12px 20px;
+            background-color: #4a90e2;
+            /* Primary blue color */
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+        }
+
+        #submitbtn:hover {
+            background-color: #357ae8;
+            /* Darker blue on hover */
+        }
+
+        #submitbtn:active {
+            transform: scale(0.98);
+            /* Slight press effect */
+        }
+
+        /* Container for weather information */
+        #info {
+            background-color: rgba(255, 255, 255, 0.9);
+            /* Slightly transparent white background */
+            padding: 30px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 450px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            text-align: center;
+            min-height: 200px;
+            /* Ensure a minimum size */
+        }
+
+        /* Styling for the individual weather data lines */
+        #info h2 {
+            margin-bottom: 15px;
+            font-size: 1.25em;
+            color: #555;
+            font-weight: 500;
+        }
+
+        /* Specific styling for the location and overall weather (more prominent) */
+        #lctn {
+            font-size: 1.8em;
+            font-weight: 600;
+            color: #2c3e50;
+            /* Darker color for location */
+            margin-bottom: 25px;
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 10px;
+        }
+
+        #overall {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #e74c3c;
+            /* Placeholder for a prominent status color */
+        }
+
+        /* Media query for smaller screens */
+        @media (max-width: 600px) {
+            .input-group {
+                max-width: 90%;
+            }
+
+            #info {
+                max-width: 90%;
+            }
+
+            #lctn {
+                font-size: 1.5em;
+            }
+
+            #overall {
+                font-size: 1.3em;
+            }
+        }
+    </style>
+    <script>
+        let search_input = document.getElementById('inputbtn');
+        let search_btn = document.getElementById('submitbtn');
+
+        let lctn = document.getElementById('lctn');
+        let temp = document.getElementById('temp');
+        let wind = document.getElementById('wind');
+        let overall = document.getElementById('overall');
+
+        search_btn.addEventListener('click', async () => {
+            let place = search_input.value.trim();
+            console.log(place);
+            lctn.innerText = "Loading... Please wait";
+            if (!place || place.length === 0) {
+                alert('error');
+                return;
+            }
+
+            const geocodingAPI = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(place)}&count=10&language=en&format=json`;
+            const geoRes = await fetch(geocodingAPI);
+            const geoData = await geoRes.json();
+
+            const latitude = geoData.results[0].latitude;
+            const longitude = geoData.results[0].longitude;
+
+            console.log(`latitude : ${latitude} & longitude : ${longitude}`);
+
+            const wetherAPI = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,wind_speed_10m&hourly=temperature_2m,relative_humidity_2m,wind_speed_10m`;
+            const weatherRes = await fetch(wetherAPI);
+            const weatherData = await weatherRes.json();
+
+            console.log(`Temperature : ${weatherData.current.temperature_2m} & Wind Speed : ${weatherData.current.wind_speed_10m}`);
+
+            lctn.innerText = `Location : ${place}`;
+            temp.innerText = `Temperature : ${weatherData.current.temperature_2m}`;
+            wind.innerText = `Wind Speed : ${weatherData.current.wind_speed_10m}`;
+
+            if (temp < -15 || temp > 40 || wind >= 39) {
+                overall.innerText = 'OverAll Weather : very bad';
+            }
+            else if (temp < 5 || temp > 35 || wind >= 19) {
+                overall.innerText = 'OverAll Weather : bad';
+            }
+            else {
+                overall.innerText = 'OverAll Weather : good';
+            }
+
+
+        });
+    </script>
+</body>
+
+</html>
